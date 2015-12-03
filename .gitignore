@@ -22,3 +22,7 @@ sysinfo.txt
 
 # OS generated
 .DS_Store*
+
+# screenshots
+/screenshots/
+screenshots.meta
