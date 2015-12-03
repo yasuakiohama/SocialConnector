@@ -5,10 +5,11 @@ using System.Collections;
 public class CaptureAndShareImage : MonoBehaviour
 {
 	private const string URL = "http://www.desunoya.sakura.ne.jp/product/panda/";
-	private const string MESSAGE = "#一撃入魂！ぱんだボール";
+	private const string MESSAGE = "#ぱんだボール";
 	private const string SCREENSHOTS = "screenshots/";
 	private const string EXTENSION = ".png";
 	private string fileName = "";
+	private bool isShoot = false;
 
 	void Awake()
 	{
@@ -35,9 +36,11 @@ public class CaptureAndShareImage : MonoBehaviour
 	/// </summary>
 	public void Shoot ()
 	{
-		CreateScreenshotsFileName ();
-		Application.CaptureScreenshot (SCREENSHOTS + "/" + fileName);
-		StartCoroutine (CaptureImageWriteWaiting ());
+		if (!isShoot) {
+			isShoot = true;
+			CreateScreenshotsFileName ();
+			StartCoroutine (CaptureImageWriteWaiting ());
+		}
 	}
 
 	/// <summary>
@@ -56,12 +59,23 @@ public class CaptureAndShareImage : MonoBehaviour
 	/// <param name="message">Message.</param>
 	IEnumerator CaptureImageWriteWaiting()
 	{
-		while (!System.IO.File.Exists (GetImgPath + fileName)) {
+		// レイアウト設定のために1フレーム待つ
+		yield return new WaitForEndOfFrame ();
+
+		//写真撮影
+		Application.CaptureScreenshot (SCREENSHOTS + "/" + fileName);
+
+		do {
 			//Debug.Log ("Temporary ScreenShot hav not been written yet. " + GetImgPath + fileName);
-			yield return null;
-		}
+			//書込み処理のために1フレーム待つ
+			yield return new WaitForEndOfFrame ();
+		} while (!System.IO.File.Exists (GetImgPath + fileName));
+
+		// キャプチャを保存する処理として１フレーム待つ
+		yield return new WaitForEndOfFrame ();
 
 		SocialConnector.Share (MESSAGE, URL, GetImgPath + fileName);
+		isShoot = false;
 		yield break;
 	}
 }
